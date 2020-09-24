@@ -37,7 +37,6 @@ CPictureSearcherApp theApp;
 
 
 // CPictureSearcherApp initialization
-
 BOOL CPictureSearcherApp::InitInstance()
 {
 	// InitCommonControlsEx() is required on Windows XP if an application

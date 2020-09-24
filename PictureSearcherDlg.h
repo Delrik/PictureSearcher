@@ -24,10 +24,26 @@ public:
 // Implementation
 protected:
 	HICON m_hIcon;
-
 	// Generated message map functions
 	virtual BOOL OnInitDialog();
+	BOOL PreTranslateMessage(MSG* pMsg);
 	afx_msg void OnPaint();
 	afx_msg HCURSOR OnQueryDragIcon();
 	DECLARE_MESSAGE_MAP()
+public:
+	afx_msg void OnBnClickedButtonSearch();
+	CEdit editBox;
+	CButton button;
+	CStatic pictureBox;
+	afx_msg void OnSizing(UINT fwSide, LPRECT pRect);
+	afx_msg void OnSize(UINT nType, int cx, int cy);
+	afx_msg void OnWindowPosChanged(WINDOWPOS* lpwndpos);
+	afx_msg void OnGetMinMaxInfo(MINMAXINFO* lpMMI);
+	//My vars
+private:
+	bool loaded;
+	int minX;
+	int minY;
+public:
+	afx_msg void OnExitSizeMove();
 };

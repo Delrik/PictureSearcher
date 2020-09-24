@@ -4,6 +4,10 @@
 #define VC_EXTRALEAN            // Exclude rarely-used stuff from Windows headers
 #endif
 
+#ifndef _CRT_SECURE_NO_WARNINGS
+#define _CRT_SECURE_NO_WARNINGS
+#endif
+
 #include "targetver.h"
 
 #define _ATL_CSTRING_EXPLICIT_CONSTRUCTORS      // some CString constructors will be explicit
@@ -28,6 +32,8 @@
 
 #include <afxcontrolbars.h>     // MFC support for ribbons and control bars
 
+#include <curl/curl.h>			// cURL for searching an image
+#include <string>
 
 
 

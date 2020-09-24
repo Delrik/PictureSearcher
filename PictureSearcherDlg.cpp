@@ -155,94 +155,97 @@ void CPictureSearcherDlg::OnBnClickedButtonSearch()
 		editBox.EnableWindow(true);
 		return;
 	}
+	CImage img;
 	CT2CA ct2caBuf(queryBuf);
 	std::string query(ct2caBuf), result;
+	query = url_encode(query);
 	std::random_device rd;
 	std::mt19937 mersenne(rd());
-	std::string offset = std::to_string(mersenne() % 101);
-	query = url_encode(query);
-	query = "https://bing-image-search1.p.rapidapi.com/images/search?offset=" + offset + "&count=1&q=" + query;
-
-
-	CURL* hnd = curl_easy_init();
+	CURL* hnd;
 	CURLcode curlResult;
-	if (hnd) {
-		struct curl_slist* headers = NULL;
-		headers = curl_slist_append(headers, "x-rapidapi-host: bing-image-search1.p.rapidapi.com");
-		headers = curl_slist_append(headers, "x-rapidapi-key: bf049f7a77msh37fa3b217d866e0p174151jsn87b3b5dfa07e");
-
-		curl_easy_setopt(hnd, CURLOPT_CUSTOMREQUEST, "GET");
-		curl_easy_setopt(hnd, CURLOPT_URL, query.c_str());
-		curl_easy_setopt(hnd, CURLOPT_HTTPHEADER, headers);
-		curl_easy_setopt(hnd, CURLOPT_WRITEFUNCTION, WriteCallback);
-		curl_easy_setopt(hnd, CURLOPT_WRITEDATA, &result);
-
-		curlResult = curl_easy_perform(hnd);
-		curl_easy_cleanup(hnd);
-		if (result == "") return;
-		int start = result.find("contentUrl") + 14;
-		int end = result.find("\"", start);
-		
-		std::string url = result.substr(start, end - start);
-		url.erase(remove(url.begin(), url.end(), '\\'), url.end());
-
+	struct curl_slist* headers = NULL;
+	headers = curl_slist_append(headers, "x-rapidapi-host: bing-image-search1.p.rapidapi.com");
+	headers = curl_slist_append(headers, "x-rapidapi-key: bf049f7a77msh37fa3b217d866e0p174151jsn87b3b5dfa07e");
+	std::string url;
+	for (int counter = 0; !img;counter++) {
+		std::string offset = std::to_string(mersenne() % 101);
+		query = "https://bing-image-search1.p.rapidapi.com/images/search?offset=" + offset + "&count=1&q=" + query;
 		hnd = curl_easy_init();
 		if (hnd) {
-			FILE* file;
-			file = fopen("1.jpg", "wb");
-			if (file == NULL) {	
-				exit(1);
-			}
-			curl_easy_setopt(hnd, CURLOPT_URL, url.c_str());
-			curl_easy_setopt(hnd, CURLOPT_WRITEFUNCTION, NULL);
-			curl_easy_setopt(hnd, CURLOPT_WRITEDATA, file);
-			curlResult = curl_easy_perform(hnd);
-			curl_easy_cleanup(hnd);
-			if (curlResult) {
-				exit(1);
-			}
-			fclose(file);
-			Sleep(1000);
+			curl_easy_setopt(hnd, CURLOPT_CUSTOMREQUEST, "GET");
+			curl_easy_setopt(hnd, CURLOPT_URL, query.c_str());
+			curl_easy_setopt(hnd, CURLOPT_HTTPHEADER, headers);
+			curl_easy_setopt(hnd, CURLOPT_WRITEFUNCTION, WriteCallback);
+			curl_easy_setopt(hnd, CURLOPT_WRITEDATA, &result);
 
-			CImage img;
-			img.Load(L"1.jpg");
-			if (!img) {
-				MessageBox(L"Incorrect request", L"Error", MB_OK);
-				Sleep(2000);
+			curlResult = curl_easy_perform(hnd);
+			Sleep(3000);
+			curl_easy_cleanup(hnd);
+			if (result == "") return;
+			if (result.find("\"value\": [],") != std::string::npos) {
+				MessageBox(L"Nothing found!", L"Error", MB_OK);
 				editBox.EnableWindow(true);
 				button.ShowWindow(true);
 				return;
 			}
-			//Resize
-			CImage sm_img;
+			int start = result.find("contentUrl") + 14;
+			int end = result.find("\"", start);
 
-			CDC* screenDC = GetDC();
-			CDC* pMDC = new CDC;
-			pMDC->CreateCompatibleDC(screenDC);
+			url = result.substr(start, end - start);
+			url.erase(remove(url.begin(), url.end(), '\\'), url.end());
 
-			CBitmap* pb = new CBitmap;
-			RECT rc;
-			pictureBox.GetWindowRect(&rc);
-			int iNewWidth = rc.right - rc.left;
-			int iNewHeight = rc.bottom - rc.top;
-			pb->CreateCompatibleBitmap(pMDC, iNewWidth, iNewHeight);
-			img.StretchBlt(pMDC->m_hDC, 0, 0, iNewWidth, iNewHeight, SRCCOPY);
-			// Visualize
-			HDC hdcpic = ::GetDC(pictureBox.m_hWnd);
-			img.StretchBlt(hdcpic, 0, 0, iNewWidth, iNewHeight, SRCCOPY);
+			hnd = curl_easy_init();
+			if (hnd) {
+				FILE* file;
+				file = fopen("1.jpg", "wb");
+				if (file == NULL) {
+					exit(1);
+				}
+				curl_easy_setopt(hnd, CURLOPT_URL, url.c_str());
+				curl_easy_setopt(hnd, CURLOPT_WRITEFUNCTION, NULL);
+				curl_easy_setopt(hnd, CURLOPT_WRITEDATA, file);
+				curlResult = curl_easy_perform(hnd);
+				curl_easy_cleanup(hnd);
+				if (curlResult) {
+					exit(1);
+				}
+				fclose(file);
 
-			img.Detach();
-			ReleaseDC(screenDC);
+
+				img.Load(L"1.jpg");
+				if (counter > 99) {
+					MessageBox(L"Nothing found!", L"Error", MB_OK);
+					editBox.EnableWindow(true);
+					button.ShowWindow(true);
+					return;
+				}
+			}
 		}
-		Sleep(2000);
-		loaded = true;
-		editBox.EnableWindow(true);
-		button.ShowWindow(true);
 	}
+	//Resize
+	CImage sm_img;
 
-	// TODO: Add your control notification handler code here
+	CDC* screenDC = GetDC();
+	CDC* pMDC = new CDC;
+	pMDC->CreateCompatibleDC(screenDC);
+
+	CBitmap* pb = new CBitmap;
+	RECT rc;
+	pictureBox.GetWindowRect(&rc);
+	int iNewWidth = rc.right - rc.left;
+	int iNewHeight = rc.bottom - rc.top;
+	pb->CreateCompatibleBitmap(pMDC, iNewWidth, iNewHeight);
+	img.StretchBlt(pMDC->m_hDC, 0, 0, iNewWidth, iNewHeight, SRCCOPY);
+	// Visualize
+	HDC hdcpic = ::GetDC(pictureBox.m_hWnd);
+	img.StretchBlt(hdcpic, 0, 0, iNewWidth, iNewHeight, SRCCOPY);
+
+	img.Detach();
+	ReleaseDC(screenDC);
+	loaded = true;
+	editBox.EnableWindow(true);
+	button.ShowWindow(true);
 }
-
 
 void CPictureSearcherDlg::OnSizing(UINT fwSide, LPRECT pRect)
 {

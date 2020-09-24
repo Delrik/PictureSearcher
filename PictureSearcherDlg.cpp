@@ -8,9 +8,6 @@
 #include "PictureSearcherDlg.h"
 #include "afxdialogex.h"
 
-#include <cctype>
-#include <iomanip>
-#include <sstream>
 
 
 #ifdef _DEBUG
@@ -160,8 +157,11 @@ void CPictureSearcherDlg::OnBnClickedButtonSearch()
 	}
 	CT2CA ct2caBuf(queryBuf);
 	std::string query(ct2caBuf), result;
+	std::random_device rd;
+	std::mt19937 mersenne(rd());
+	std::string offset = std::to_string(mersenne() % 101);
 	query = url_encode(query);
-	query = "https://bing-image-search1.p.rapidapi.com/images/search?offset=1&count=1&q=" + query;
+	query = "https://bing-image-search1.p.rapidapi.com/images/search?offset=" + offset + "&count=1&q=" + query;
 
 
 	CURL* hnd = curl_easy_init();

@@ -35,6 +35,11 @@
 #include <curl/curl.h>			// cURL for searching an image
 #include <string>
 
+#include <cctype>
+#include <iomanip>
+#include <sstream>
+#include <random>
+
 
 
 
